@@ -22,7 +22,8 @@ let state = {
   isMonitoring: false,
   lastLeadId: null,
   dispositionObserver: null,
-  pendingLeadCheckTimeout: null
+  pendingLeadCheckTimeout: null,
+  wasDispoScreenVisible: false // Track previous visibility state
 };
 
 /**
@@ -54,13 +55,18 @@ function setupDispositionMonitoring() {
   };
   
   state.dispositionObserver = new MutationObserver(function(mutations) {
-    // Check if disposition screen is no longer visible
+    // Check if disposition screen is currently visible
     const dispoScreen = document.querySelector(config.dispoScreenSelector);
-    
-    if (!dispoScreen || !isElementVisible(dispoScreen)) {
-      console.log('[Contact Center Extension] Disposition screen closure detected');
+    const isVisible = isElementVisible(dispoScreen);
+
+    // Detect transition from Visible -> Hidden
+    if (state.wasDispoScreenVisible && !isVisible) {
+      console.log('[Contact Center Extension] Disposition screen closure detected (Visible -> Hidden)');
       onDispositionScreenClosed();
     }
+
+    // Update state for next mutation
+    state.wasDispoScreenVisible = isVisible;
   });
   
   state.dispositionObserver.observe(targetElement, observerOptions);
@@ -122,8 +128,14 @@ function getLeadId() {
   }
   
   // Extract the lead ID from the href (e.g., "/lead_info/1837017" -> "1837017")
-  const match = href.match(/\/lead_info\/(.+)/);
-  return match ? match[1] : null;
+  // Handle potential variations or query parameters if necessary
+  try {
+      const match = href.match(/\/lead_info\/([^\/?#]+)/);
+      return match ? match[1] : null;
+  } catch (e) {
+      console.error('[Contact Center Extension] Error parsing lead ID:', e);
+      return null;
+  }
 }
 
 /**
@@ -185,6 +197,10 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
     
     if (config.enabled && !state.dispositionObserver) {
       setupDispositionMonitoring();
+    } else if (!config.enabled && state.dispositionObserver) {
+        state.dispositionObserver.disconnect();
+        state.dispositionObserver = null;
+        console.log('[Contact Center Extension] Monitoring stopped');
     }
     
     console.log('[Contact Center Extension] Extension toggled:', config.enabled);

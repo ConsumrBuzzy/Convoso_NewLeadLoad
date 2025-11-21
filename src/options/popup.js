@@ -2,7 +2,7 @@
  * Popup Script - Handles user interactions in the extension popup
  */
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
   loadStatus();
   setupEventListeners();
 });
@@ -11,10 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
  * Load and display the current extension status
  */
 function loadStatus() {
-  chrome.storage.sync.get(['enabled', 'lastLeadId'], function(items) {
+  chrome.storage.sync.get(['enabled', 'lastLeadId'], function (items) {
     const enableToggle = document.getElementById('enableToggle');
     const statusIndicator = document.getElementById('statusIndicator');
-    
+
     if (items.enabled) {
       enableToggle.classList.add('enabled');
       statusIndicator.classList.remove('disabled');
@@ -22,7 +22,7 @@ function loadStatus() {
       enableToggle.classList.remove('enabled');
       statusIndicator.classList.add('disabled');
     }
-    
+
     if (items.lastLeadId) {
       document.getElementById('lastLeadId').textContent = items.lastLeadId;
     }
@@ -36,14 +36,14 @@ function setupEventListeners() {
   const enableToggle = document.getElementById('enableToggle');
   const openOptions = document.getElementById('openOptions');
   const openDocs = document.getElementById('openDocs');
-  
-  enableToggle.addEventListener('click', function() {
-    chrome.storage.sync.get(['enabled'], function(items) {
+
+  enableToggle.addEventListener('click', function () {
+    chrome.storage.sync.get(['enabled'], function (items) {
       const newState = !items.enabled;
-      chrome.storage.sync.set({ enabled: newState }, function() {
+      chrome.storage.sync.set({ enabled: newState }, function () {
         loadStatus();
         // Notify content scripts of the change
-        chrome.tabs.query({}, function(tabs) {
+        chrome.tabs.query({}, function (tabs) {
           tabs.forEach(tab => {
             chrome.tabs.sendMessage(tab.id, {
               action: 'toggleEnabled',
@@ -56,12 +56,12 @@ function setupEventListeners() {
       });
     });
   });
-  
-  openOptions.addEventListener('click', function() {
+
+  openOptions.addEventListener('click', function () {
     chrome.runtime.openOptionsPage();
   });
-  
-  openDocs.addEventListener('click', function() {
+
+  openDocs.addEventListener('click', function () {
     chrome.tabs.create({
       url: chrome.runtime.getURL('src/options/help.html')
     });
