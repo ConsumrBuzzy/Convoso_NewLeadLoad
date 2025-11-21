@@ -28,10 +28,5 @@
     "default_popup": "src/options/popup.html",
     "default_title": "Contact Center Productivity Add-On"
   },
-  "options_page": "src/options/options.html",
-  "icons": {
-    "16": "src/assets/icon-16.png",
-    "48": "src/assets/icon-48.png",
-    "128": "src/assets/icon-128.png"
-  }
+  "options_page": "src/options/options.html"
 }
