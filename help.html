@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Center Extension - Help</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+            max-width: 900px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 32px;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 32px;
+            font-size: 16px;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 32px;
+            margin-bottom: 16px;
+            font-size: 20px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 8px;
+        }
+        
+        h3 {
+            color: #555;
+            margin-top: 20px;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        
+        p {
+            color: #666;
+            margin-bottom: 12px;
+        }
+        
+        ul, ol {
+            margin-left: 20px;
+            margin-bottom: 16px;
+            color: #666;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        code {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 3px;
+            padding: 2px 6px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 13px;
+            color: #d63384;
+        }
+        
+        .code-block {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 16px;
+            margin: 16px 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+            color: #333;
+        }
+        
+        .note {
+            background-color: #e7f3ff;
+            border-left: 4px solid #007bff;
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 2px;
+        }
+        
+        .note strong {
+            color: #004085;
+        }
+        
+        .warning {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 12px;
+            margin: 16px 0;
+            border-radius: 2px;
+        }
+        
+        .warning strong {
+            color: #856404;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+        
+        th, td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Contact Center Productivity Add-On</h1>
+        <p class="subtitle">Help & Documentation</p>
+        
+        <h2>Overview</h2>
+        <p>
+            The Contact Center Productivity Add-On is a Chrome Extension designed to automate the transition to a new lead after a disposition screen closes in your CRM system. This extension monitors your CRM interface and automatically clicks the "New Lead" button if a new lead doesn't load automatically after completing a call disposition.
+        </p>
+        
+        <h2>How It Works</h2>
+        <p>The extension performs the following steps:</p>
+        <ol>
+            <li><strong>Monitors Disposition Screen:</strong> Watches for the disposition screen/modal to close.</li>
+            <li><strong>Checks Lead Field:</strong> After the disposition screen closes, checks if the lead ID has changed.</li>
+            <li><strong>Triggers New Lead Action:</strong> If the lead hasn't changed after 2 seconds, automatically clicks the "New Lead" button.</li>
+        </ol>
+        
+        <h2>Getting Started</h2>
+        <h3>1. Install the Extension</h3>
+        <ol>
+            <li>Open Chrome and navigate to <code>chrome://extensions/</code></li>
+            <li>Enable "Developer mode" (toggle in the top-right corner)</li>
+            <li>Click "Load unpacked"</li>
+            <li>Select the extension folder</li>
+        </ol>
+        
+        <h3>2. Configure CSS Selectors</h3>
+        <p>The extension needs to know which elements on your CRM page to interact with. You'll need to provide three CSS selectors:</p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Selector</th>
+                    <th>Purpose</th>
+                    <th>Example</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Disposition Screen Selector</strong></td>
+                    <td>The element that contains the disposition screen (hidden when disposition is complete)</td>
+                    <td><code>div.results_div</code></td>
+                </tr>
+                <tr>
+                    <td><strong>Lead Field Selector</strong></td>
+                    <td>The element displaying the current lead ID (extension extracts ID from href)</td>
+                    <td><code>li.active a[href*="/lead_info/"]</code></td>
+                </tr>
+                <tr>
+                    <td><strong>New Lead Button Selector</strong></td>
+                    <td>The button to click to load a new lead</td>
+                    <td><code>button[ng-click*="createLead"]</code></td>
+                </tr>
+            </tbody>
+        </table>
+        
+        <h3>3. Finding CSS Selectors</h3>
+        <p>To find the correct CSS selectors for your CRM:</p>
+        <ol>
+            <li>Open your CRM page in Chrome</li>
+            <li>Right-click on the element you want to target</li>
+            <li>Select "Inspect" to open the Developer Tools</li>
+            <li>Look at the HTML structure and identify a unique selector</li>
+            <li>Test the selector in the browser console using <code>document.querySelector('your-selector')</code></li>
+        </ol>
+        
+        <div class="note">
+            <strong>Tip:</strong> Use attribute selectors like <code>[ng-click*="createLead"]</code> or <code>[href*="/lead_info/"]</code> as they tend to be more stable than class names, which may change frequently.
+        </div>
+        
+        <h2>Configuration</h2>
+        <p>Click the "Configure" button in the extension popup to access the settings page. You can customize:</p>
+        
+        <h3>CSS Selectors</h3>
+        <ul>
+            <li><strong>Disposition Screen Selector:</strong> Element containing the disposition screen</li>
+            <li><strong>Lead Field Selector:</strong> Element displaying the current lead ID</li>
+            <li><strong>New Lead Button Selector:</strong> The "New Lead" button to click</li>
+        </ul>
+        
+        <h3>Timing Parameters</h3>
+        <ul>
+            <li><strong>DOM Settle Delay (milliseconds):</strong> Time to wait after disposition screen closes before checking the lead field. Default: 50ms</li>
+            <li><strong>Lead ID Check Delay (milliseconds):</strong> Time to wait before checking if the lead has changed. Default: 2000ms</li>
+        </ul>
+        
+        <h2>Troubleshooting</h2>
+        
+        <h3>The extension isn't working</h3>
+        <p>Check the following:</p>
+        <ol>
+            <li><strong>Is the extension enabled?</strong> Click the extension icon and check if the toggle is on.</li>
+            <li><strong>Are the CSS selectors correct?</strong> Open the Developer Console (F12) and test your selectors using <code>document.querySelector('your-selector')</code></li>
+            <li><strong>Check the console logs:</strong> Open the Developer Console to see if there are any error messages from the extension.</li>
+        </ol>
+        
+        <h3>The "New Lead" button isn't being clicked</h3>
+        <p>This could be due to:</p>
+        <ul>
+            <li>Incorrect CSS selector for the button</li>
+            <li>The button being disabled or hidden</li>
+            <li>The button requiring additional conditions to be clickable</li>
+        </ul>
+        
+        <div class="warning">
+            <strong>Note:</strong> If the button requires a specific state or has JavaScript event handlers that prevent clicking, you may need to adjust your approach or contact support.
+        </div>
+        
+        <h3>The lead ID isn't being detected</h3>
+        <p>Make sure your Lead Field Selector is pointing to an element with an <code>href</code> attribute containing the lead ID. The extension extracts the ID from the URL pattern.</p>
+        
+        <h2>Browser Console Debugging</h2>
+        <p>To debug the extension, open the Developer Console (F12) and look for log messages starting with <code>[Contact Center Extension]</code>. These logs will help you understand what the extension is doing.</p>
+        
+        <div class="code-block">
+// Example console output:
+[Contact Center Extension] Content script loaded
+[Contact Center Extension] Configuration loaded: {...}
+[Contact Center Extension] Disposition monitoring initialized
+[Contact Center Extension] Disposition screen closure detected
+[Contact Center Extension] Initial lead ID: 1837017
+[Contact Center Extension] Current lead ID: 1837018
+[Contact Center Extension] New lead detected. No action required.
+        </div>
+        
+        <h2>Support & Feedback</h2>
+        <p>
+            If you encounter any issues or have suggestions for improvements, please contact the extension developer or refer to the documentation provided with the extension.
+        </p>
+    </div>
+</body>
+</html>

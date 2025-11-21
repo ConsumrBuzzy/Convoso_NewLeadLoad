@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Contact Center Productivity Add-On",
+  "version": "1.0.0",
+  "description": "Automates the transition to a new lead after a disposition screen closes in your CRM.",
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "src/content/content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "action": {
+    "default_popup": "src/options/popup.html",
+    "default_title": "Contact Center Productivity Add-On"
+  },
+  "options_page": "src/options/options.html",
+  "icons": {
+    "16": "src/assets/icon-16.png",
+    "48": "src/assets/icon-48.png",
+    "128": "src/assets/icon-128.png"
+  }
+}
