@@ -6,8 +6,12 @@
  * 
  * Detection Strategy:
  * 1. Watch for disposition button clicks (quick_dispo_btn class)
- * 2. Monitor for the Create Lead button to become visible (ng-hide class removed)
- * 3. Auto-click with debounce to prevent multiple triggers
+ * 2. Monitor for tab change from "Dispos" to "Leads" (indicates disposition completed)
+ * 3. Detect when Create Lead button is visible on Leads tab
+ * 4. Auto-click with debounce to prevent multiple triggers
+ * 
+ * Flow: Agent clicks dispo → "Saving..." appears → Tab switches to Leads → 
+ *       Create Lead button is visible → Extension clicks it
  */
 
 (function() {
@@ -17,8 +21,8 @@
     // CONFIGURATION
     // ===========================================
     const CONFIG = {
-        // Delay (ms) after detecting button visibility before clicking
-        CLICK_DELAY_MS: 500,
+        // Delay (ms) after detecting tab change before clicking
+        CLICK_DELAY_MS: 300,
         
         // Cooldown (ms) between auto-clicks to prevent rapid firing
         COOLDOWN_MS: 3000,
@@ -28,6 +32,15 @@
         
         // Selector for disposition buttons
         DISPO_BUTTON_SELECTOR: '.quick_dispo_btn',
+        
+        // Selector for the Leads tab (to detect when it becomes active)
+        LEADS_TAB_SELECTOR: 'li[ng-class*="currentTab == \'lead\'"]',
+        
+        // Selector for the Dispos tab
+        DISPOS_TAB_SELECTOR: 'li[ng-if*="quick_dispositions_enabled"]',
+        
+        // Selector for the "Saving..." indicator
+        SAVING_INDICATOR_SELECTOR: '#quick_dispo_save',
         
         // Debug mode - set to true for console logging
         DEBUG: true
@@ -40,7 +53,9 @@
         enabled: true,              // Extension enabled/disabled
         lastClickTime: 0,           // Timestamp of last auto-click
         pendingClick: null,         // Timeout ID for pending click
-        dispositionInProgress: false // Flag to track if we're waiting for dispo to complete
+        dispositionInProgress: false, // Flag to track if we're waiting for dispo to complete
+        wasOnDisposTab: false,      // Track if we were on Dispos tab before
+        lastTabState: null          // Track last known tab state
     };
 
     // ===========================================
@@ -100,8 +115,40 @@
      */
     function isOnLeadsTab() {
         // Look for the active Leads tab indicator
-        const leadsTab = document.querySelector('li[ng-class*="currentTab == \'lead\'"].active');
+        const leadsTab = document.querySelector(CONFIG.LEADS_TAB_SELECTOR + '.active');
         return leadsTab !== null;
+    }
+
+    /**
+     * Checks if we're currently on the Dispos tab
+     * @returns {boolean}
+     */
+    function isOnDisposTab() {
+        const disposTab = document.querySelector(CONFIG.DISPOS_TAB_SELECTOR + '.active');
+        // Also check if the quick dispos panel is visible
+        const quickDispoMain = document.querySelector('#quick_dispo_main');
+        const isVisible = quickDispoMain && !quickDispoMain.classList.contains('ng-hide');
+        return disposTab !== null || isVisible;
+    }
+
+    /**
+     * Checks if the "Saving..." indicator is visible (disposition in progress)
+     * @returns {boolean}
+     */
+    function isSavingDisposition() {
+        const savingDiv = document.querySelector(CONFIG.SAVING_INDICATOR_SELECTOR);
+        if (!savingDiv) return false;
+        return !savingDiv.classList.contains('ng-hide');
+    }
+
+    /**
+     * Gets the current tab state
+     * @returns {string} 'dispos', 'leads', or 'other'
+     */
+    function getCurrentTabState() {
+        if (isOnDisposTab()) return 'dispos';
+        if (isOnLeadsTab()) return 'leads';
+        return 'other';
     }
 
     // ===========================================
