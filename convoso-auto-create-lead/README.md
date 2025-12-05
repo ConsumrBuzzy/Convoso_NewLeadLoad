@@ -40,15 +40,21 @@ You can use any icon generator or create simple icons with a "+" and user symbol
 ## How It Works
 
 ```text
-Agent clicks disposition button (e.g., "No Answer")
+Agent is on Dispos tab → clicks disposition button (e.g., "No Answer")
          ↓
-Extension detects disposition click
+Extension detects disposition click, marks "in progress"
          ↓
-Monitors for "Create Lead" button to become visible
+"Saving..." appears briefly while Convoso processes
          ↓
-Waits 500ms (configurable debounce)
+Tab automatically switches from Dispos → Leads
          ↓
-Auto-clicks the button
+Extension detects tab change, finds "Create Lead" button
+         ↓
+Waits 300ms (configurable debounce)
+         ↓
+Auto-clicks the "Create Lead" button
+         ↓
+New lead form opens with empty Primary Phone field
          ↓
 Badge shows ✓ confirmation
 ```
@@ -59,9 +65,9 @@ Edit `content.js` to adjust these settings:
 
 ```javascript
 const CONFIG = {
-    CLICK_DELAY_MS: 500,      // Delay before clicking (ms)
+    CLICK_DELAY_MS: 300,      // Delay before clicking (ms)
     COOLDOWN_MS: 3000,        // Minimum time between clicks (ms)
-    DEBUG: true               // Console logging
+    DEBUG: true               // Console logging (view in browser DevTools)
 };
 ```
 

@@ -219,16 +219,50 @@
     }
 
     /**
-     * Handles detection of the Create Lead button becoming visible
+     * Handles detection of tab change from Dispos to Leads
      */
-    function onCreateLeadButtonVisible() {
+    function onTabChangeToLeads() {
         // Only proceed if a disposition was in progress
         if (!state.dispositionInProgress) {
-            log('Button visible but no disposition in progress, checking if should click...');
-            // Still schedule if enabled - handles page refresh scenarios
+            log('Tab changed to Leads but no disposition in progress, skipping');
+            return;
         }
 
-        scheduleClick();
+        log('Tab changed from Dispos to Leads after disposition');
+        
+        // Check if Create Lead button is visible
+        const button = getVisibleCreateLeadButton();
+        if (button) {
+            log('Create Lead button is visible, scheduling click');
+            scheduleClick();
+        } else {
+            log('Create Lead button not found, will watch for it');
+            // Set up a short polling to catch the button
+            watchForCreateLeadButton();
+        }
+    }
+
+    /**
+     * Watches for the Create Lead button to appear (short polling fallback)
+     */
+    function watchForCreateLeadButton() {
+        let attempts = 0;
+        const maxAttempts = 20; // 2 seconds max
+        
+        const checkInterval = setInterval(() => {
+            attempts++;
+            const button = getVisibleCreateLeadButton();
+            
+            if (button) {
+                clearInterval(checkInterval);
+                log('Create Lead button found after ' + attempts + ' attempts');
+                scheduleClick();
+            } else if (attempts >= maxAttempts) {
+                clearInterval(checkInterval);
+                log('Create Lead button not found after max attempts');
+                state.dispositionInProgress = false;
+            }
+        }, 100);
     }
 
     // ===========================================
@@ -237,52 +271,65 @@
 
     /**
      * Creates and starts the MutationObserver to watch for DOM changes
+     * Primary focus: detecting tab changes and disposition completion
      */
     function setupObserver() {
         const observer = new MutationObserver((mutations) => {
+            // Check current tab state
+            const currentTab = getCurrentTabState();
+            
+            // Detect tab transition: Dispos → Leads
+            if (state.lastTabState === 'dispos' && currentTab === 'leads') {
+                log('Detected tab change: Dispos → Leads');
+                if (state.dispositionInProgress) {
+                    onTabChangeToLeads();
+                }
+            }
+            
+            // Update last known tab state
+            if (currentTab !== state.lastTabState) {
+                log('Tab state changed:', state.lastTabState, '→', currentTab);
+                state.lastTabState = currentTab;
+            }
+
+            // Also watch for the Create Lead button becoming visible directly
             for (const mutation of mutations) {
-                // Check for class changes on the Create Lead button
+                // Check for class changes on tabs or the Create Lead button
                 if (mutation.type === 'attributes' && 
                     mutation.attributeName === 'class') {
                     
                     const target = mutation.target;
+                    
+                    // Check if Leads tab became active
+                    if (target.matches && target.matches(CONFIG.LEADS_TAB_SELECTOR)) {
+                        if (target.classList.contains('active') && state.dispositionInProgress) {
+                            log('Leads tab became active');
+                            setTimeout(() => {
+                                const button = getVisibleCreateLeadButton();
+                                if (button) {
+                                    scheduleClick();
+                                }
+                            }, 100);
+                        }
+                    }
                     
                     // Check if this is the Create Lead button becoming visible
                     if (target.matches && target.matches(CONFIG.CREATE_LEAD_SELECTOR)) {
                         const wasHidden = mutation.oldValue && mutation.oldValue.includes('ng-hide');
                         const isNowVisible = !target.classList.contains('ng-hide');
                         
-                        if (wasHidden && isNowVisible) {
+                        if (wasHidden && isNowVisible && state.dispositionInProgress) {
                             log('Create Lead button became visible (class change)');
-                            onCreateLeadButtonVisible();
+                            scheduleClick();
                         }
                     }
-                }
-
-                // Check for style changes
-                if (mutation.type === 'attributes' && 
-                    mutation.attributeName === 'style') {
                     
-                    const target = mutation.target;
-                    if (target.matches && target.matches(CONFIG.CREATE_LEAD_SELECTOR)) {
-                        const button = getVisibleCreateLeadButton();
-                        if (button) {
-                            log('Create Lead button became visible (style change)');
-                            onCreateLeadButtonVisible();
+                    // Check if "Saving..." indicator appeared (disposition started server-side)
+                    if (target.id === 'quick_dispo_save') {
+                        if (!target.classList.contains('ng-hide')) {
+                            log('Saving indicator appeared - disposition processing');
                         }
                     }
-                }
-
-                // Check for added nodes that might be the button
-                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                    // Small delay to let Angular finish rendering
-                    setTimeout(() => {
-                        const button = getVisibleCreateLeadButton();
-                        if (button && state.dispositionInProgress) {
-                            log('Create Lead button appeared in DOM');
-                            onCreateLeadButtonVisible();
-                        }
-                    }, 100);
                 }
             }
         });
@@ -316,14 +363,23 @@
             const dispoButton = target.closest(CONFIG.DISPO_BUTTON_SELECTOR);
             
             if (dispoButton) {
-                log('Disposition button clicked:', dispoButton.textContent.trim());
+                const dispoText = dispoButton.textContent.trim();
+                log('Disposition button clicked:', dispoText);
+                
+                // Mark disposition as in progress
                 state.dispositionInProgress = true;
+                
+                // Record that we're on Dispos tab (ensures proper state tracking)
+                state.lastTabState = 'dispos';
                 
                 // Notify background script
                 sendMessage({
                     action: 'dispositionStarted',
-                    disposition: dispoButton.textContent.trim()
+                    disposition: dispoText
                 });
+                
+                // Also start watching for the tab change immediately
+                log('Watching for tab change to Leads...');
             }
         }, true); // Use capture phase to catch before Angular handles it
 
@@ -398,10 +454,19 @@
         // Load saved settings
         loadSettings();
 
+        // Set initial tab state
+        state.lastTabState = getCurrentTabState();
+        log('Initial tab state:', state.lastTabState);
+
         // Set up all listeners and observers
         setupMessageListener();
         setupDispositionTracking();
         setupObserver();
+
+        // Check if we're already on Dispos tab (agent might be mid-workflow)
+        if (state.lastTabState === 'dispos') {
+            log('Currently on Dispos tab - ready to track disposition');
+        }
 
         // Check if button is already visible on page load
         setTimeout(() => {
