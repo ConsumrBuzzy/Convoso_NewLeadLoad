@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Convoso Auto Create Lead</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <span class="logo-icon">+</span>
+                <span class="logo-user">👤</span>
+            </div>
+            <h1>Auto Create Lead</h1>
+            <p class="subtitle">Convoso Extension</p>
+        </div>
+
+        <!-- Main Toggle -->
+        <div class="toggle-section">
+            <label class="toggle-label">
+                <span class="label-text">Auto-Click Enabled</span>
+                <div class="toggle-switch">
+                    <input type="checkbox" id="enableToggle" checked>
+                    <span class="slider"></span>
+                </div>
+            </label>
+        </div>
+
+        <!-- Status Section -->
+        <div class="status-section">
+            <div class="status-item">
+                <span class="status-label">Status:</span>
+                <span id="statusText" class="status-value status-active">Active</span>
+            </div>
+            <div class="status-item">
+                <span class="status-label">Page:</span>
+                <span id="pageStatus" class="status-value">Checking...</span>
+            </div>
+        </div>
+
+        <!-- Manual Trigger Button -->
+        <div class="action-section">
+            <button id="manualTrigger" class="btn btn-primary">
+                <span class="btn-icon">⚡</span>
+                Manual Trigger
+            </button>
+            <p class="help-text">Click to manually trigger the Create Lead button</p>
+        </div>
+
+        <!-- Info Section -->
+        <div class="info-section">
+            <h3>How it works:</h3>
+            <ol>
+                <li>Disposition a lead using Quick Dispos</li>
+                <li>Extension detects when "Create Lead" appears</li>
+                <li>Button is automatically clicked</li>
+            </ol>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <span class="version">v1.0.0</span>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+</html>
